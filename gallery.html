@@ -1211,5 +1211,37 @@
       delay: 0.2
     });
   </script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+async function loadGallery() {
+  const galleryContainer = document.getElementById("gallery");
+
+  const galleryIndex = await fetch("/content/gallery")
+    .then(res => res.text())
+    .then(html => new DOMParser().parseFromString(html, "text/html"));
+
+  const links = [...galleryIndex.querySelectorAll("a")]
+    .filter(link => link.href.endsWith(".md"))
+    .map(link => link.href);
+
+  links.forEach(async (url) => {
+    const md = await fetch(url).then(res => res.text());
+    const title = md.match(/title:\s*"(.*)"/)?.[1] || "Untitled";
+    const image = md.match(/image:\s*"(.*)"/)?.[1] || "";
+
+    const item = document.createElement("div");
+    item.innerHTML = `
+      <figure>
+        <img src="${image}" alt="${title}" style="width:200px;">
+        <figcaption>${title}</figcaption>
+      </figure>
+    `;
+    galleryContainer.appendChild(item);
+  });
+}
+
+loadGallery();
+</script>
+
 </body>
 </html>
