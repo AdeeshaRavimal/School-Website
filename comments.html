@@ -1,0 +1,1101 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comments - Eheliyagoda Central College</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    :root {
+     :root {
+  --primary: #800000; /* Maroon */
+  --secondary: #a30000; /* Darker Maroon or a strong supporting red */
+  --accent: #ffd700; /* Gold/Yellow accent */
+  --light: #fff8e1; /* Very light warm yellow */
+  --dark: #4b0000; /* Deep maroon for dark elements */
+  --white: #ffffff;
+  --gray: #f5f5f5;
+
+  --navbar-bg: rgba(128, 0, 0, 0.2); /* Transparent maroon */
+  --glass-bg: rgba(255, 255, 200, 0.1); /* Light yellow glass effect */
+  --glass-border: rgba(255, 215, 0, 0.3); /* Gold tint border */
+  --shadow: 0 8px 32px rgba(128, 0, 0, 0.2); /* Maroon shadow */
+}
+
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+      color: #333;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+     background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff200' fill-opacity='0.2'%3E%3Ccircle cx='20' cy='20' r='2'/%3E%3Ccircle cx='0' cy='20' r='2'/%3E%3Ccircle cx='40' cy='20' r='2'/%3E%3Ccircle cx='20' cy='0' r='2'/%3E%3Ccircle cx='20' cy='40' r='2'/%3E%3C/g%3E%3C/svg%3E");
+background-color: #800000; /* Maroon */
+
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    .content {
+      flex-grow: 1;
+      padding: 20px;
+    }
+
+    .top-header {
+      background: var(--navbar-bg);
+      backdrop-filter: blur(10px);
+      padding: 15px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: absolute;
+      width: 100%;
+      z-index: 100;
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: var(--shadow);
+    }
+
+    .logo {
+      height: 60px;
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover {
+      transform: scale(1.05);
+    }
+
+    .logo img {
+      height: 100%;
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 30px;
+      margin: 0 auto;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: 1px solid var(--glass-border);
+    }
+
+    .nav-menu a {
+      text-decoration: none;
+      color: #fff;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      position: relative;
+      padding: 5px 10px;
+    }
+
+    .nav-menu a::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--accent);
+      transition: width 0.3s ease;
+    }
+
+    .nav-menu a:hover::after {
+      width: 100%;
+    }
+
+    .nav-menu a:hover, .nav-menu a.active {
+      color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .desktop-social-icons {
+      display: flex;
+      gap: 15px;
+      background: var(--glass-bg);
+      padding: 8px 15px;
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+    }
+
+    .desktop-social-icons a {
+      color: #fff;
+      font-size: 1.2rem;
+      transition: all 0.3s ease;
+    }
+
+    .desktop-social-icons a:hover {
+      color: var(--accent);
+      transform: scale(1.2);
+    }
+
+    .hamburger {
+      display: none;
+      cursor: pointer;
+      width: 30px;
+      height: 24px;
+      position: relative;
+      z-index: 200;
+    }
+
+    .hamburger span {
+      display: block;
+      position: absolute;
+      height: 3px;
+      width: 100%;
+      background: #fff;
+      border-radius: 3px;
+      opacity: 1;
+      left: 0;
+      transform: rotate(0deg);
+      transition: 0.25s ease-in-out;
+    }
+
+    .hamburger span:nth-child(1) { top: 0px; }
+    .hamburger span:nth-child(2) { top: 10px; }
+    .hamburger span:nth-child(3) { top: 20px; }
+
+    .hamburger.active span:nth-child(1) {
+      top: 10px;
+      transform: rotate(45deg);
+    }
+
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+
+    .hamburger.active span:nth-child(3) {
+      top: 10px;
+      transform: rotate(-45deg);
+    }
+
+    .mobile-menu-logo,
+    .mobile-social-icons {
+      display: none;
+    }
+
+    .comments-section {
+      max-width: 1200px;
+      margin: 80px auto 50px;
+      padding: 0 20px;
+      opacity: 0;
+      transform: translateY(30px);
+            
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--primary);
+      position: relative;
+      display: inline-block;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .section-title::after {
+      content: '';
+      position: absolute;
+      height: 4px;
+      width: 80px;
+      background: linear-gradient(to right, var(--accent), transparent);
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .comments-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+            
+    }
+
+    .comment-card {
+     
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+      transition: all 0.4s ease;
+      display: flex;
+      align-items: flex-start;
+      opacity: 0;
+      transform: translateY(20px);
+          background-color: #fef6d7; /* Light gold */
+ 
+background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 1000'%3E%3Cg fill-opacity='0.08'%3E%3Ccircle fill='%23331001' cx='50' cy='0' r='50'/%3E%3Cg fill='%23361203' %3E%3Ccircle cx='0' cy='50' r='50'/%3E%3Ccircle cx='100' cy='50' r='50'/%3E%3C/g%3E%3Ccircle fill='%233a1404' cx='50' cy='100' r='50'/%3E%3Cg fill='%233e1505' %3E%3Ccircle cx='0' cy='150' r='50'/%3E%3Ccircle cx='100' cy='150' r='50'/%3E%3C/g%3E%3Ccircle fill='%23411706' cx='50' cy='200' r='50'/%3E%3Cg fill='%23451907' %3E%3Ccircle cx='0' cy='250' r='50'/%3E%3Ccircle cx='100' cy='250' r='50'/%3E%3C/g%3E%3Ccircle fill='%23481b08' cx='50' cy='300' r='50'/%3E%3Cg fill='%234c1d09' %3E%3Ccircle cx='0' cy='350' r='50'/%3E%3Ccircle cx='100' cy='350' r='50'/%3E%3C/g%3E%3Ccircle fill='%234f1f0a' cx='50' cy='400' r='50'/%3E%3Cg fill='%2353210a' %3E%3Ccircle cx='0' cy='450' r='50'/%3E%3Ccircle cx='100' cy='450' r='50'/%3E%3C/g%3E%3Ccircle fill='%2357230b' cx='50' cy='500' r='50'/%3E%3Cg fill='%235a250b' %3E%3Ccircle cx='0' cy='550' r='50'/%3E%3Ccircle cx='100' cy='550' r='50'/%3E%3C/g%3E%3Ccircle fill='%235e280b' cx='50' cy='600' r='50'/%3E%3Cg fill='%23612a0b' %3E%3Ccircle cx='0' cy='650' r='50'/%3E%3Ccircle cx='100' cy='650' r='50'/%3E%3C/g%3E%3Ccircle fill='%23652c0b' cx='50' cy='700' r='50'/%3E%3Cg fill='%23692f0a' %3E%3Ccircle cx='0' cy='750' r='50'/%3E%3Ccircle cx='100' cy='750' r='50'/%3E%3C/g%3E%3Ccircle fill='%236c310a' cx='50' cy='800' r='50'/%3E%3Cg fill='%23703309' %3E%3Ccircle cx='0' cy='850' r='50'/%3E%3Ccircle cx='100' cy='850' r='50'/%3E%3C/g%3E%3Ccircle fill='%23733609' cx='50' cy='900' r='50'/%3E%3Cg fill='%23773808' %3E%3Ccircle cx='0' cy='950' r='50'/%3E%3Ccircle cx='100' cy='950' r='50'/%3E%3C/g%3E%3Ccircle fill='%237A3B07' cx='50' cy='1000' r='50'/%3E%3C/g%3E%3C/svg%3E");
+
+    }
+
+    .comment-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+      border-color: var(--accent);
+    }
+
+    .comment-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin-right: 15px;
+  flex-shrink: 0;
+  border: 2px solid var(--accent);
+  background-image: url('/pictures/default-avatar.jpg'); /* Replace with your image path */
+  background-size: cover;
+  background-position: center;
+}
+
+.comment-avatar img {
+  display: none; /* Hide the img tag since we're using a background image */
+}
+    .comment-content {
+      flex-grow: 1;
+    }
+
+    .comment-author {
+      font-weight: bold;
+      color: var(--dark);
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+
+    .comment-text {
+      font-size: 0.95rem;
+      color: #333;
+      line-height: 1.5;
+    }
+
+    .add-comment-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+     
+      border: none;
+      border-radius: 50%;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: all 0.3s ease;
+            background: #833AB4;
+background: linear-gradient(90deg, rgba(131, 58, 180, 1) 0%, rgba(253, 29, 29, 1) 22%, rgba(84, 78, 69, 1) 66%);
+    }
+
+    .add-comment-btn i {
+      color: var(--white);
+      font-size: 24px;
+    }
+
+    .add-comment-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 16px rgba(12, 20, 20, 0.3);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 15px;
+      padding: 20px;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: var(--shadow);
+      position: relative;
+      opacity: 0;
+      transform: scale(0.8);
+    }
+
+    .modal-content h2 {
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      color: #666;
+      cursor: pointer;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: var(--primary);
+    }
+
+    .comment-form {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .comment-form label {
+      font-size: 14px;
+      color: var(--dark);
+      font-weight: 500;
+    }
+
+    .comment-form input,
+    .comment-form textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+      background: rgba(120, 255, 255, 0.8);
+      font-size: 14px;
+      color: #333;
+      resize: vertical;
+    }
+
+    .comment-form textarea {
+      min-height: 100px;
+    }
+
+    .comment-form button {
+      padding: 10px;
+     
+      color: var(--white);
+      border: none;
+      border-radius: 8px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+           background: #3ab43a;
+background: linear-gradient(90deg, rgba(58, 180, 58, 0.88) 0%, rgba(253, 29, 29, 1) 50%, rgba(252, 176, 69, 1) 100%);
+    }
+
+    .comment-form button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .footer-wrapper {
+      width: 100%;
+      padding: 20px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--glass-border);
+    }
+
+    .footer {
+      max-width: 1200px;
+      margin: 0 auto;
+      position: relative;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .footer-banner {
+      width: 100%;
+      height: 150px;
+      background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('/api/placeholder/1200/300');
+      background-size: cover;
+      background-position: center;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.4s ease;
+    }
+
+    .footer-banner:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    }
+
+    .school-name {
+      color: white;
+      text-align: center;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    .marshal { position: absolute; left: -99999px; visibility: hidden; }
+
+    .school-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 5px;
+      letter-spacing: 2px;
+    }
+
+    .school-subtitle {
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+    }
+
+    .contact-btn {
+      margin-top: 15px;
+      padding: 8px 20px;
+      background: var(--glass-bg);
+      color: #fff;
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .contact-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: 0.5s;
+    }
+
+    .contact-btn:hover::before {
+      left: 100%;
+    }
+
+    .contact-btn:hover {
+      background: var(--white);
+      color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .footer-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 10px;
+      font-size: 0.85rem;
+      color: #666;
+    }
+
+    .copyright {
+      flex-grow: 1;
+    }
+
+    .social-icons {
+      display: flex;
+      gap: 15px;
+    }
+
+    .social-icon {
+      color: #555;
+      font-size: 1.2rem;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+      color: var(--primary);
+      transform: scale(1.2);
+    }
+
+    @media (max-width: 768px) {
+      .top-header {
+        padding: 15px;
+        background: var(--dark);
+      }
+
+      .desktop-social-icons {
+        display: none;
+      }
+
+      .hamburger {
+        display: block;
+      }
+
+      .nav-menu {
+        position: fixed;
+        top: 0;
+        right: -100%;
+        width: 80%;
+        max-width: 300px;
+        height: 100vh;
+        background: var(--dark);
+        backdrop-filter: blur(10px);
+        flex-direction: column;
+        padding: 60px 20px 20px;
+        transition: right 0.3s ease;
+        z-index: 100;
+        gap: 15px;
+        overflow-y: auto;
+        transform: none;
+        left: auto;
+      }
+
+      .nav-menu.active {
+        right: 0;
+      }
+
+      .mobile-menu-logo {
+        display: block;
+        margin-bottom: 30px;
+        text-align: center;
+      }
+
+      .mobile-menu-logo img {
+        height: 60px;
+      }
+
+      .mobile-social-icons {
+        display: flex;
+        gap: 15px;
+        margin-top: 30px;
+        justify-content: center;
+      }
+
+      .mobile-social-icons a {
+        color: #fff;
+        font-size: 1.2rem;
+      }
+
+      .section-title {
+        font-size: 24px;
+      }
+
+      .school-title {
+        font-size: 2rem;
+      }
+
+      .school-subtitle {
+        font-size: 1.2rem;
+      }
+
+      .modal-content {
+        max-width: 90%;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .comments-section {
+        margin-top: 70px;
+      }
+
+      .section-title {
+        font-size: 20px;
+      }
+
+      .comment-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .comment-avatar {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+
+      .school-title {
+        font-size: 1.5rem;
+      }
+
+      .school-subtitle {
+        font-size: 1rem;
+      }
+
+      .footer-bottom {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+      }
+
+      .social-icons {
+        justify-content: center;
+      }
+
+      .add-comment-btn {
+        width: 50px;
+        height: 50px;
+      }
+
+      .add-comment-btn i {
+        font-size: 20px;
+      }
+    }
+
+    @supports not (backdrop-filter: blur(12px)) {
+      .top-header, .nav-menu, .desktop-social-icons, .comment-card, .footer-wrapper, .modal-content {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-header">
+    <div class="logo">
+   <a href="index.html"><img src="pictures/logo1.png" alt="Ehaliyagoda Central College Logo"></a> 
+    </div>
+    <nav class="nav-menu" id="nav-menu">
+      <div class="mobile-menu-logo">
+        <a href="index.html"><img src="pictures/logo1.png" alt="Ehaliyagoda Central College Logo"></a> 
+      </div>
+      <a href="index.html">HOME</a>
+      <a href="gallery.html">GALLERY</a>
+              <a href="societies_games.html">ASSOCIATIONS</a>
+      <a href="aboutus.html">ABOUT US</a>
+      <a href="contactus.html">CONTACT US</a>
+     
+      <div class="mobile-social-icons">
+        <a href="https://www.facebook.com/eccps.ecc"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://www.youtube.com/@eccps7224"><i class="fab fa-youtube"></i></a>
+        <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33"><i class="fab fa-whatsapp"></i></a>
+        <a href="https://www.instagram.com/eccps_official/"><i class="fab fa-instagram"></i></a>
+      </div>
+    </nav>
+    <div class="hamburger" id="menu-toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+    <div class="desktop-social-icons">
+      <a href="https://www.facebook.com/eccps.ecc"><i class="fab fa-facebook-f"></i></a>
+      <a href="https://www.youtube.com/@eccps7224"><i class="fab fa-youtube"></i></a>
+      <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33"><i class="fab fa-whatsapp"></i></a>
+      <a href="https://www.instagram.com/eccps_official/"><i class="fab fa-instagram"></i></a>
+    </div>
+  </div>
+
+  <div class="content">
+    <section class="comments-section">
+      <h2 class="section-title">User Comments</h2>
+      <div class="comments-grid" id="comments-grid">
+        <!-- Comments will be dynamically loaded here -->
+      </div>
+    </section>
+  </div>
+
+  <button class="add-comment-btn" id="add-comment-btn">
+    <i class="fas fa-pencil-alt"></i>
+  </button>
+
+  <div class="modal" id="comment-modal">
+    <div class="modal-content">
+      <span class="close-btn" id="close-modal">×</span>
+      <h2>Add Your Comment</h2>
+      <form class="comment-form" id="comment-form">
+        <div>
+          <label for="user-name">Your Name</label>
+          <input type="text" id="user-name" placeholder="Enter your name" required>
+        </div>
+        <div>
+          <label for="user-comment">Your Comment</label>
+          <textarea id="user-comment" placeholder="Enter your comment" required></textarea>
+        </div>
+        <button type="submit">Submit Comment</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer-wrapper">
+    <div class="footer">
+      <div class="footer-banner">
+        <div class="school-name">
+          <h1 class="school-title">EHELIYAGODA</h1>
+          <h2 class="school-subtitle">CENTRAL COLLEGE</h2>
+        </div>
+        <button class="contact-btn" onclick="location.href='contactus.html'">Contact Us</button>
+      </div>
+      <div class="footer-bottom">
+        <div class="copyright">
+                                 All Rights Reserved &copy 2025 by ECCPS
+        </div>
+       <div class="social-icons">
+                        <a href="https://www.facebook.com/eccps.ecc" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                            </svg>
+                        </a>
+                        <a href="https://www.instagram.com/eccps_official/" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
+                            </svg>
+                        </a>
+                       <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33" class="social-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 32.5 32.5">
+        <path d="M16.001 3.2c-7.078 0-12.8 5.723-12.8 12.8 0 2.296.617 4.543 1.788 6.507l-1.896 6.891 7.061-1.849a12.746 12.746 0 0 0 5.847 1.453h.001c7.078 0 12.8-5.723 12.8-12.8 0-3.414-1.329-6.627-3.739-9.038S19.415 3.2 16.001 3.2zm0 23.2c-1.679 0-3.325-.437-4.774-1.264l-.342-.195-4.192 1.098 1.117-4.126-.222-.35a10.548 10.548 0 0 1-1.62-5.627c0-5.825 4.744-10.567 10.567-10.567a10.52 10.52 0 0 1 7.526 3.117 10.52 10.52 0 0 1 3.117 7.526c0 5.824-4.744 10.567-10.567 10.567zm5.916-7.835c-.326-.163-1.926-.949-2.225-1.056-.3-.112-.519-.163-.737.163s-.849 1.056-1.041 1.275c-.187.219-.374.244-.7.081-.326-.163-1.376-.507-2.624-1.617-.971-.867-1.627-1.938-1.819-2.263-.187-.319-.02-.491.143-.654.148-.146.326-.374.489-.561.163-.187.219-.326.326-.544.107-.219.054-.408-.027-.57-.081-.163-.738-1.778-1.011-2.438-.265-.64-.534-.55-.737-.56l-.63-.011c-.219 0-.57.081-.868.408s-1.14 1.113-1.14 2.713 1.167 3.147 1.327 3.363c.163.219 2.294 3.505 5.561 4.914.777.336 1.384.537 1.857.688.78.248 1.488.213 2.046.129.624-.093 1.926-.786 2.2-1.544.273-.757.273-1.406.191-1.544-.081-.137-.3-.219-.626-.382z"/>
+    </svg>
+</a>
+
+                       <a href="#" class="social-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M22.675 0h-21.35C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h21.351C23.407 24 24 23.407 24 22.675V1.325C24 .593 23.407 0 22.675 0zM17.71 18h-1.95l-3.055-4.17L9.09 18H7.125l3.99-5.535L7.38 6h2.01l2.79 3.96L15.22 6h1.935l-3.81 5.265L17.71 18z"/>
+    </svg>
+</a>
+
+                        <a href="https://www.youtube.com/@eccps7224" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    const menuToggle = document.getElementById('menu-toggle');
+    const navMenu = document.getElementById('nav-menu');
+
+    menuToggle.addEventListener('click', () => {
+      menuToggle.classList.toggle('active');
+      navMenu.classList.toggle('active');
+    });
+
+    const navLinks = document.querySelectorAll('.nav-menu a:not(.mobile-social-icons a)');
+    navLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        menuToggle.classList.remove('active');
+        navMenu.classList.remove('active');
+      });
+    });
+
+    gsap.to('.comments-section', {
+      scrollTrigger: {
+        trigger: '.comments-section',
+        start: 'top 80%',
+        toggleActions: 'play none none reset'
+      },
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    });
+
+    gsap.to('.footer', {
+      scrollTrigger: {
+        trigger: '.footer',
+        start: 'top 80%',
+        toggleActions: 'play none none reset'
+      },
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    });
+
+    const buttons = document.querySelectorAll('.contact-btn');
+    buttons.forEach(button => {
+      button.addEventListener('mouseover', () => {
+        gsap.to(button, { scale: 1.1, duration: 0.3, ease: 'power2.out' });
+      });
+      button.addEventListener('mouseout', () => {
+        gsap.to(button, { scale: 1, duration: 0.3, ease: 'power2.out' });
+      });
+    });
+
+    gsap.from('.top-header', {
+      y: -100,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out',
+      delay: 0.2
+    });
+
+    const addCommentBtn = document.getElementById('add-comment-btn');
+    const modal = document.getElementById('comment-modal');
+    const closeModal = document.getElementById('close-modal');
+    const commentForm = document.getElementById('comment-form');
+    const commentsGrid = document.getElementById('comments-grid');
+
+    if (!addCommentBtn || !modal || !closeModal || !commentForm || !commentsGrid) {
+      console.error('One or more DOM elements not found:', { addCommentBtn, modal, closeModal, commentForm, commentsGrid });
+    }
+
+    ScrollTrigger.create({
+      trigger: '.footer-wrapper',
+      start: 'top bottom',
+      end: 'bottom top',
+      onEnter: () => {
+        const footerHeight = document.querySelector('.footer-wrapper').offsetHeight;
+        addCommentBtn.style.bottom = `${footerHeight + 30}px`;
+      },
+      onLeaveBack: () => addCommentBtn.style.bottom = '30px',
+      onLeave: () => addCommentBtn.style.bottom = '30px',
+      onEnterBack: () => {
+        const footerHeight = document.querySelector('.footer-wrapper').offsetHeight;
+        addCommentBtn.style.bottom = `${footerHeight + 30}px`;
+      }
+    });
+
+    addCommentBtn.addEventListener('click', () => {
+      modal.style.display = 'flex';
+      gsap.to('.modal-content', { opacity: 1, scale: 1, duration: 0.4, ease: 'power3.out' });
+    });
+
+    closeModal.addEventListener('click', () => {
+      gsap.to('.modal-content', {
+        opacity: 0,
+        scale: 0.8,
+        duration: 0.4,
+        ease: 'power3.in',
+        onComplete: () => modal.style.display = 'none'
+      });
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        gsap.to('.modal-content', {
+          opacity: 0,
+          scale: 0.8,
+          duration: 0.4,
+          ease: 'power3.in',
+          onComplete: () => modal.style.display = 'none'
+        });
+      }
+    });
+
+    // Function to attempt fetching with multiple paths
+    async function tryFetch(urls, options) {
+      for (let url of urls) {
+        try {
+          console.log(`Attempting to fetch: ${url}`);
+          const response = await fetch(url, options);
+          if (response.ok) {
+            console.log(`Successfully fetched from: ${url}`);
+            return { response, url };
+          } else {
+            console.warn(`Failed to fetch from ${url}: HTTP ${response.status} - ${await response.text()}`);
+          }
+        } catch (error) {
+          console.error(`Error fetching from ${url}:`, error);
+        }
+      }
+      throw new Error('All fetch attempts failed');
+    }
+
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const userName = document.getElementById('user-name').value.trim();
+      const userComment = document.getElementById('user-comment').value.trim();
+
+      if (userName && userComment) {
+        const basePath = window.location.pathname.includes('/eccps_website/') ? '/eccps_website/' : '/';
+        const possiblePaths = [
+          `${basePath}save_comment.php`,
+          `/eccps_website/save_comment.php`,
+          `/save_comment.php`
+        ];
+
+        try {
+          const { response } = await tryFetch(possiblePaths, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `name=${encodeURIComponent(userName)}&comment=${encodeURIComponent(userComment)}`
+          });
+          const text = await response.text(); // Get raw response
+          let result;
+          try {
+            result = JSON.parse(text);
+          } catch (e) {
+            console.error('Invalid JSON response:', text);
+            alert('Error saving comment: Server returned invalid data. Check console for details.');
+            return;
+          }
+
+          if (result.success) {
+            const newComment = document.createElement('div');
+            newComment.classList.add('comment-card');
+            newComment.innerHTML = `
+              <div class="comment-avatar">
+                <img src="" alt="Profile picture">
+              </div>
+              <div class="comment-content">
+                <p class="comment-author">${userName}</p>
+                <p class="comment-text">${userComment}</p>
+              </div>
+            `;
+            commentsGrid.prepend(newComment);
+
+            gsap.fromTo(newComment, { opacity: 0, y: 20, scale: 0.9 }, {
+              opacity: 1, y: 0, scale: 1, duration: 0.6, ease: 'power3.out'
+            });
+
+            newComment.addEventListener('mouseenter', () => {
+              gsap.to(newComment, { y: -8, scale: 1.02, duration: 0.3, ease: 'power2.out' });
+            });
+
+            newComment.addEventListener('mouseleave', () => {
+              gsap.to(newComment, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
+            });
+
+            commentForm.reset();
+            gsap.to('.modal-content', {
+              opacity: 0,
+              scale: 0.8,
+              duration: 0.4,
+              ease: 'power3.in',
+              onComplete: () => modal.style.display = 'none'
+            });
+          } else {
+            alert('Error saving comment: ' + (result.error || 'Unknown error'));
+          }
+        } catch (error) {
+          console.error('Error saving comment:', error);
+          alert('Error saving comment: ' + error.message);
+        }
+      }
+    });
+
+    async function loadComments() {
+      const basePath = window.location.pathname.includes('/eccps_website/') ? '/eccps_website/' : '/';
+      const possiblePaths = [
+        `${basePath}fetch_comments.php`,
+        `/eccps_website/fetch_comments.php`,
+        `/fetch_comments.php`
+      ];
+
+      try {
+        const { response, url } = await tryFetch(possiblePaths, {
+          method: 'GET',
+          headers: { 'Accept': 'application/json' }
+        });
+        console.log(`Using successful path for fetch_comments.php: ${url}`);
+        const comments = await response.json();
+
+        if (comments.error) throw new Error(comments.error);
+
+        if (comments.length === 0) {
+          commentsGrid.innerHTML = '<p>No comments yet. Be the first to add one!</p>';
+          return;
+        }
+
+        commentsGrid.innerHTML = '';
+        comments.forEach(comment => {
+          const newComment = document.createElement('div');
+          newComment.classList.add('comment-card');
+          newComment.innerHTML = `
+            <div class="comment-avatar">
+              <img src="/api/placeholder/50/50" alt="Profile picture">
+            </div>
+            <div class="comment-content">
+              <p class="comment-author">${comment.name}</p>
+              <p class="comment-text">${comment.comment}</p>
+            </div>
+          `;
+          commentsGrid.appendChild(newComment);
+        });
+
+        commentsGrid.querySelectorAll('.comment-card').forEach((card, index) => {
+          gsap.fromTo(card, { opacity: 0, y: 20 }, {
+            opacity: 1, y: 0, duration: 0.6, ease: 'power3.out', delay: index * 0.1
+          });
+
+          card.addEventListener('mouseenter', () => {
+            gsap.to(card, { y: -8, scale: 1.02, duration: 0.3, ease: 'power2.out' });
+          });
+
+          card.addEventListener('mouseleave', () => {
+            gsap.to(card, { y: 0, scale: 1, duration: 0.3, ease: 'power2.out' });
+          });
+        });
+      } catch (error) {
+        console.error('Error loading comments:', error);
+        commentsGrid.innerHTML = '<p>Failed to load comments. Please check the console for details or try again later.</p>';
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => loadComments());
+
+    addCommentBtn.addEventListener('mouseover', () => {
+      gsap.to(addCommentBtn, { scale: 1.1, duration: 0.3, ease: 'power2.out' });
+    });
+
+    addCommentBtn.addEventListener('mouseout', () => {
+      gsap.to(addCommentBtn, { scale: 1, duration: 0.3, ease: 'power2.out' });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,981 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Societies & Games - Eheliyagoda Central College</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js" onerror="this.src='js/gsap.min.js'"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js" onerror="this.src='js/ScrollTrigger.min.js'"></script>
+    <style>
+        :root {
+            --primary: #800000; /* Maroon */
+            --secondary: #FFFF00; /* Yellow */
+            --accent: #FFD700; /* Light Yellow */
+            --light: #FFF8DC; /* Cream */
+            --dark: #4B0000; /* Dark Maroon */
+            --white: #ffffff;
+            --gray: #e5e7eb;
+            --navbar-bg: rgba(128, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #FFF8DC 0%, #FFE4B5 100%);
+            color: #333;
+            overflow-x: hidden;
+            position: relative;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"%3E%3Ccircle cx="50" cy="50" r="50" fill="rgba(255,255,255,0.05)"/%3E%3C/svg%3E');
+            opacity: 0.3;
+            z-index: -1;
+        }
+        .top-header {
+            background: var(--navbar-bg);
+            backdrop-filter: blur(8px);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            z-index: 1003; /* Above nav-menu */
+        }
+        .logo {
+            height: 60px;
+            transition: transform 0.3s ease;
+        }
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        .logo img {
+            height: 100%;
+        }
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+            margin: 0 auto;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            z-index: 1000; /* Below top-header */
+        }
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--white);
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 5px 10px;
+        }
+        .nav-menu a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--secondary);
+            transition: width 0.3s ease;
+        }
+        .nav-menu a:hover::after {
+            width: 100%;
+        }
+        .nav-menu a:hover, .nav-menu a.active {
+            color: var(--secondary);
+            transform: translateY(-2px);
+        }
+        .desktop-social-icons {
+            display: flex;
+            gap: 15px;
+            background: var(--glass-bg);
+            padding: 8px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .desktop-social-icons a {
+            color: var(--white);
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+        }
+        .desktop-social-icons a:nth-child(1):hover {
+            color: #3b82f6; /* Facebook blue */
+            transform: scale(1.2);
+        }
+        .desktop-social-icons a:nth-child(2):hover {
+            color: #ef4444; /* YouTube red */
+            transform: scale(1.2);
+        }
+        .desktop-social-icons a:nth-child(3):hover {
+            color: #22c55e; /* WhatsApp green */
+            transform: scale(1.2);
+        }
+        .desktop-social-icons a:nth-child(4):hover {
+            color: #ec4899; /* Instagram pink */
+            transform: scale(1.2);
+        }
+        .desktop-social-icons a:nth-child(5):hover {
+            color: #0ea5e9; /* Twitter/X sky blue */
+            transform: scale(1.2);
+        }
+         .hamburger {
+            display: none;
+            cursor: pointer;
+            width: 30px;
+            height: 24px;
+            position: relative;
+            z-index: 2001;
+        }
+
+        .hamburger span {
+            display: block;
+            position: absolute;
+            height: 4px;
+            width: 100%;
+            background: #fff;
+            border-radius: 4px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: all 0.25s ease-in-out;
+        }
+
+        .hamburger span:nth-child(1) { top: 0px; }
+        .hamburger span:nth-child(2) { top: 10px; }
+        .hamburger span:nth-child(3) { top: 20px; }
+
+        .hamburger.active span:nth-child(1) {
+            top: 10px;
+            transform: rotate(45deg);
+            background: #fff;
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            top: 10px;
+            transform: rotate(-45deg);
+            background: #fff;
+        }
+
+        .mobile-menu-logo,
+        .mobile-social-icons {
+            display: none;
+        }
+
+        @supports not (backdrop-filter: blur(12px)) {
+            .top-header {
+                background: rgba(255, 255, 255, 0.1);
+            }
+            .nav-menu, .desktop-social-icons {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .top-header {
+                padding: 15px;
+                background: var(--dark);
+                position: relative;
+                backdrop-filter: none;
+                box-shadow: var(--shadow);
+            }
+
+            .desktop-social-icons {
+                display: none;
+            }
+
+            .hamburger {
+                display: block;
+            }
+
+            .nav-menu {
+                position: fixed;
+                top: 0;
+                right: -100%;
+                width: 80%;
+                max-width: 300px;
+                height: 100vh;
+                background: var(--dark);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: 60px 20px 20px;
+                transition: right 0.3s ease;
+                z-index: 2000;
+                gap: 15px;
+                overflow-y: auto;
+                transform: none;
+                left: auto;
+            }
+
+            .nav-menu.active {
+                right: 0;
+            }
+
+            .nav-menu a {
+                color: #a5f3fc;
+            }
+
+            .mobile-menu-logo {
+                display: block;
+                margin-bottom: 30px;
+                text-align: center;
+            }
+
+            .mobile-menu-logo img {
+                height: 60px;
+            }
+
+            .mobile-social-icons {
+                display: flex;
+                gap: 15px;
+                margin-top: 30px;
+                justify-content: center;
+            }
+
+            .mobile-social-icons a {
+                color: #fff;
+                font-size: 1.2rem;
+            }
+        }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .societies-grid, .games-grid {
+                display: block; /* Fallback */
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .school-title { font-size: 1.5rem; }
+            .school-subtitle { font-size: 1rem; }
+            .footer-bottom {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            .social-icons { justify-content: center; }
+            .section-title { font-size: 2rem; }
+        }
+        .hero {
+            height: 50vh;
+            background: linear-gradient(rgba(75, 0, 0, 0.7), rgba(75, 0, 0, 0.7)), url('pictures/banner_clubs.webp') center/cover;
+            color: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            margin: 2rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1; /* Below nav-menu */
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: inherit;
+            z-index: -1;
+        }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(30px);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-bottom: 2rem;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .section-title {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 2rem;
+            position: relative;
+            display: inline-block;
+            text-align: center;
+            width: 100%;
+        }
+        .section-title:after {
+            content: '';
+            position: absolute;
+            height: 3px;
+            width: 60%;
+            background-color: var(--secondary);
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .societies-grid, .games-grid {
+            display: block; /* Fallback for older browsers */
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 4rem;
+            min-height: 400px;
+        }
+        .overview-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            transition: all 0.4s ease;
+            text-align: center;
+        }
+        .overview-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            padding: 1.5rem;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow);
+            transition: all 0.4s ease;
+            position: relative;
+            perspective: 1000px;
+            cursor: pointer;
+            min-height: 300px; /* Ensure consistent card height */
+        }
+        .card:focus-within {
+            outline: 2px solid var(--secondary);
+            outline-offset: 2px;
+        }
+        .card-inner {
+            position: relative;
+            transform-style: preserve-3d;
+            -webkit-transform-style: preserve-3d;
+            transition: transform 0.6s;
+            height: 100%;
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .card-back {
+            transform: rotateY(180deg);
+            background: var(--glass-bg);
+            border-radius: 10px;
+            color: #555;
+        }
+        .card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card i, .card img {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+        .card i {
+            line-height: 150px; /* Center icon vertically */
+        }
+        .card h3 {
+            font-size: 1.5rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        .card p {
+            color: #555;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 4rem 0;
+        }
+        .cta-button {
+            background: linear-gradient(135deg, var(--primary), var(--dark));
+            color: var(--secondary);
+            border: none;
+            padding: 1rem 2.5rem;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+        }
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        .cta-button:hover::before {
+            left: 100%;
+        }
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .footer-wrapper {
+            width: 100%;
+            padding: 20px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            z-index: 1;
+        }
+        .footer {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        .footer-banner {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url('pictures/footer-bg.jpg') center/cover;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        .footer-banner:hover {
+            transform: scale(1.02);
+        }
+        .school-name {
+            color: var(--white);
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        .school-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        .school-subtitle {
+            font-size: 1.5rem;
+            letter-spacing: 1px;
+        }
+        .contact-btn {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: var(--glass-bg);
+            color: var(--white);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .contact-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        .contact-btn:hover::before {
+            left: 100%;
+        }
+        .contact-btn:hover {
+            background: var(--white);
+            color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .footer-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .copyright {
+            flex-grow: 1;
+        }
+        .social-icons {
+            display: flex;
+            gap: 15px;
+        }
+        .social-icon {
+            color: #555;
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .social-icon:hover {
+            color: var(--primary);
+            transform: scale(1.2);
+        }
+        @supports not (backdrop-filter: blur(8px)) {
+            .card, .card-back, .overview-card, .footer-wrapper, .nav-menu, .desktop-social-icons {
+                background: rgba(255, 255, 255, 0.5);
+            }
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                      row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                      headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+    </script>
+    <div class="top-header">
+        <div class="logo">
+            <img src="pictures/logo1.png" alt="Eheliyagoda Central College Logo">
+        </div>
+        <nav class="nav-menu" id="nav-menu" aria-hidden="true">
+            <div class="mobile-menu-logo">
+                <img src="pictures/logo1.png" alt="Eheliyagoda Central College Logo">
+            </div>
+            <a href="index.html">HOME</a>
+            <a href="gallery.html">GALLERY</a>
+            <a href="societies_games.html" class="active">ASSOCIATIONS</a>
+            <a href="aboutus.html">ABOUT US</a>
+            <a href="contactus.html">CONTACT US</a>
+            <div class="mobile-social-icons">
+                <a href="https://www.facebook.com/eccps.ecc" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.youtube.com/@eccps7224" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                <a href="https://www.instagram.com/eccps_official/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+            </div>
+        </nav>
+        <div class="hamburger" id="menu-toggle" role="button" aria-expanded="false" aria-controls="nav-menu">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="desktop-social-icons">
+            <a href="https://www.facebook.com/eccps.ecc" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.youtube.com/@eccps7224" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+            <a href="https://www.instagram.com/eccps_official/" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            
+        </div>
+    </div>
+    <section class="hero">
+        <h1 class="hero-title">Societies & Games</h1>
+        <p class="hero-subtitle">Join our vibrant community through societies and sports at Eheliyagoda Central College!</p>
+    </section>
+    <main>
+        <section class="societies-section">
+            <h2 class="section-title">Our Societies</h2>
+            <div class="societies-grid">
+               
+                <div class="card" tabindex="0" aria-label="Science Society Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <i class="fas fa-flask"></i>
+                            <h3>Science Society</h3>
+                            <p>Explore the wonders of science through experiments and educational trips.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Science Society</h3>
+                            <p><strong>Schedule:</strong> Tuesdays & Thursdays, 3:00 PM - 5:00 PM</p>
+                            <p><strong>Achievements:</strong> 1st Place in National Science Fair 2024</p>
+                            <p><strong>Membership:</strong> Open to Grades 9-12, requires interest in science projects</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Music Society Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <i class="fas fa-music"></i>
+                            <h3>Music Society</h3>
+                            <p>Unleash your musical talents with performances and workshops.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Music Society</h3>
+                            <p><strong>Schedule:</strong> Mondays & Wednesdays, 2:30 PM - 4:30 PM</p>
+                            <p><strong>Achievements:</strong> Gold Medal at Inter-School Music Fest 2025</p>
+                            <p><strong>Membership:</strong> Open to all grades, auditions required</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Photography Club Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <i class="fas fa-camera"></i>
+                            <h3>Photography Club</h3>
+                            <p>Capture the world through workshops and exhibitions.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Photography Club</h3>
+                            <p><strong>Schedule:</strong> Fridays, 3:00 PM - 5:00 PM</p>
+                            <p><strong>Achievements:</strong> Best Photo Exhibit at Regional Arts 2024</p>
+                            <p><strong>Membership:</strong> Grades 8-12, bring your own camera</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Environmental Society Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <i class="fas fa-leaf"></i>
+                            <h3>Environmental Society</h3>
+                            <p>Promote sustainability with cleanups and campaigns.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Environmental Society</h3>
+                            <p><strong>Schedule:</strong> Saturdays, 9:00 AM - 12:00 PM</p>
+                            <p><strong>Achievements:</strong> Green School Award 2025</p>
+                            <p><strong>Membership:</strong> Open to all, enthusiasm for eco-projects needed</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="games-section">
+            <h2 class="section-title">Our Games</h2>
+            <div class="games-grid">
+                
+                <div class="card" tabindex="0" aria-label="Cricket Team Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <img src="pictures/cricket.jpg" alt="Cricket Team in action" loading="lazy" onerror="this.src='pictures/default.jpg'; this.alt='Default Image'; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="fas fa-baseball-ball" style="display: none;"></i>
+                            <h3>Cricket</h3>
+                            <p>Compete in inter-school tournaments.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Cricket</h3>
+                            <p><strong>Schedule:</strong> Mondays, Wednesdays, 3:00 PM - 6:00 PM</p>
+                            <p><strong>Achievements:</strong> Runners-Up in National Cricket Championship 2025</p>
+                            <p><strong>Requirements:</strong> Grades 9-12, basic cricket skills, team trials</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Volleyball Team Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <img src="pictures/volleyball.jpg" alt="Volleyball Team in action" loading="lazy" onerror="this.src='pictures/default.jpg'; this.alt='Default Image'; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="fas fa-volleyball-ball" style="display: none;"></i>
+                            <h3>Volleyball</h3>
+                            <p>Join for thrilling matches and teamwork.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Volleyball</h3>
+                            <p><strong>Schedule:</strong> Tuesdays & Thursdays, 3:00 PM - 5:30 PM</p>
+                            <p><strong>Achievements:</strong> 1st Place in District Volleyball 2024</p>
+                            <p><strong>Requirements:</strong> Grades 8-11, physical fitness, team selection</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Chess Club Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <img src="pictures/chess.jpg" alt="Chess Club match" loading="lazy" onerror="this.src='pictures/default.jpg'; this.alt='Default Image'; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="fas fa-chess" style="display: none;"></i>
+                            <h3>Chess</h3>
+                            <p>Sharpen your mind with tournaments.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Chess</h3>
+                            <p><strong>Schedule:</strong> Fridays, 2:00 PM - 4:00 PM</p>
+                            <p><strong>Achievements:</strong> Bronze Medal at National Chess 2025</p>
+                            <p><strong>Requirements:</strong> All grades, basic chess knowledge</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" tabindex="0" aria-label="Athletics Team Card">
+                    <div class="card-inner">
+                        <div class="card-front">
+                            <img src="pictures/athletics.jpg" alt="Athletics Team training" loading="lazy" onerror="this.src='pictures/default.jpg'; this.alt='Default Image'; this.style.display='none'; this.nextElementSibling.style.display='block';">
+                            <i class="fas fa-running" style="display: none;"></i>
+                            <h3>Athletics</h3>
+                            <p>Train for track and field events.</p>
+                        </div>
+                        <div class="card-back">
+                            <h3>Athletics</h3>
+                            <p><strong>Schedule:</strong> Wednesdays & Saturdays, 3:00 PM - 5:00 PM</p>
+                            <p><strong>Achievements:</strong> 2 Gold Medals at Regional Meet 2024</p>
+                            <p><strong>Requirements:</strong> Grades 9-12, fitness assessment</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="cta-section">
+            <a href="contactus.html" class="cta-button pulse">Get Involved Today! <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </main>
+    <div class="footer-wrapper">
+        <div class="footer">
+            <div class="footer-banner">
+                <div class="school-name">
+                    <h1 class="school-title">EHELIYAGODA</h1>
+                    <h2 class="school-subtitle">CENTRAL COLLEGE</h2>
+                </div>
+                <button class="contact-btn" onclick="location.href='contactus.html'">Contact Us</button>
+            </div>
+            <div class="footer-bottom">
+                <div class="copyright">
+                    All Rights Reserved ©2025 by ECCPS
+                </div>
+                <div class="social-icons">
+                        <a href="https://www.facebook.com/eccps.ecc" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951z"/>
+                            </svg>
+                        </a>
+                        <a href="https://www.instagram.com/eccps_official/" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8 0C5.829 0 5.556.01 4.703.048 3.85.088 3.269.222 2.76.42a3.917 3.917 0 0 0-1.417.923A3.927 3.927 0 0 0 .42 2.76C.222 3.268.087 3.85.048 4.7.01 5.555 0 5.827 0 8.001c0 2.172.01 2.444.048 3.297.04.852.174 1.433.372 1.942.205.526.478.972.923 1.417.444.445.89.719 1.416.923.51.198 1.09.333 1.942.372C5.555 15.99 5.827 16 8 16s2.444-.01 3.298-.048c.851-.04 1.434-.174 1.943-.372a3.916 3.916 0 0 0 1.416-.923c.445-.445.718-.891.923-1.417.197-.509.332-1.09.372-1.942C15.99 10.445 16 10.173 16 8s-.01-2.445-.048-3.299c-.04-.851-.175-1.433-.372-1.941a3.926 3.926 0 0 0-.923-1.417A3.911 3.911 0 0 0 13.24.42c-.51-.198-1.092-.333-1.943-.372C10.443.01 10.172 0 7.998 0h.003zm-.717 1.442h.718c2.136 0 2.389.007 3.232.046.78.035 1.204.166 1.486.275.373.145.64.319.92.599.28.28.453.546.598.92.11.281.24.705.275 1.485.039.843.047 1.096.047 3.231s-.008 2.389-.047 3.232c-.035.78-.166 1.203-.275 1.485a2.47 2.47 0 0 1-.599.919c-.28.28-.546.453-.92.598-.28.11-.704.24-1.485.276-.843.038-1.096.047-3.232.047s-2.39-.009-3.233-.047c-.78-.036-1.203-.166-1.485-.276a2.478 2.478 0 0 1-.92-.598 2.48 2.48 0 0 1-.6-.92c-.109-.281-.24-.705-.275-1.485-.038-.843-.046-1.096-.046-3.233 0-2.136.008-2.388.046-3.231.036-.78.166-1.204.276-1.486.145-.373.319-.64.599-.92.28-.28.546-.453.92-.598.282-.11.705-.24 1.485-.276.738-.034 1.024-.044 2.515-.045v.002zm4.988 1.328a.96.96 0 1 0 0 1.92.96.96 0 0 0 0-1.92zm-4.27 1.122a4.109 4.109 0 1 0 0 8.217 4.109 4.109 0 0 0 0-8.217zm0 1.441a2.667 2.667 0 1 1 0 5.334 2.667 2.667 0 0 1 0-5.334z"/>
+                            </svg>
+                        </a>
+                       <a href="https://whatsapp.com/channel/0029VagpeKEG3R3arH2Yvv33" class="social-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 32.5 32.5">
+        <path d="M16.001 3.2c-7.078 0-12.8 5.723-12.8 12.8 0 2.296.617 4.543 1.788 6.507l-1.896 6.891 7.061-1.849a12.746 12.746 0 0 0 5.847 1.453h.001c7.078 0 12.8-5.723 12.8-12.8 0-3.414-1.329-6.627-3.739-9.038S19.415 3.2 16.001 3.2zm0 23.2c-1.679 0-3.325-.437-4.774-1.264l-.342-.195-4.192 1.098 1.117-4.126-.222-.35a10.548 10.548 0 0 1-1.62-5.627c0-5.825 4.744-10.567 10.567-10.567a10.52 10.52 0 0 1 7.526 3.117 10.52 10.52 0 0 1 3.117 7.526c0 5.824-4.744 10.567-10.567 10.567zm5.916-7.835c-.326-.163-1.926-.949-2.225-1.056-.3-.112-.519-.163-.737.163s-.849 1.056-1.041 1.275c-.187.219-.374.244-.7.081-.326-.163-1.376-.507-2.624-1.617-.971-.867-1.627-1.938-1.819-2.263-.187-.319-.02-.491.143-.654.148-.146.326-.374.489-.561.163-.187.219-.326.326-.544.107-.219.054-.408-.027-.57-.081-.163-.738-1.778-1.011-2.438-.265-.64-.534-.55-.737-.56l-.63-.011c-.219 0-.57.081-.868.408s-1.14 1.113-1.14 2.713 1.167 3.147 1.327 3.363c.163.219 2.294 3.505 5.561 4.914.777.336 1.384.537 1.857.688.78.248 1.488.213 2.046.129.624-.093 1.926-.786 2.2-1.544.273-.757.273-1.406.191-1.544-.081-.137-.3-.219-.626-.382z"/>
+    </svg>
+</a>
+
+                       <a href="#" class="social-icon">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M22.675 0h-21.35C.593 0 0 .593 0 1.325v21.351C0 23.407.593 24 1.325 24h21.351C23.407 24 24 23.407 24 22.675V1.325C24 .593 23.407 0 22.675 0zM17.71 18h-1.95l-3.055-4.17L9.09 18H7.125l3.99-5.535L7.38 6h2.01l2.79 3.96L15.22 6h1.935l-3.81 5.265L17.71 18z"/>
+    </svg>
+</a>
+
+                        <a href="https://www.youtube.com/@eccps7224" class="social-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                <path d="M8.051 1.999h.089c.822.003 4.987.033 6.11.335a2.01 2.01 0 0 1 1.415 1.42c.101.38.172.883.22 1.402l.01.104.022.26.008.104c.065.914.073 1.77.074 1.957v.075c-.001.194-.01 1.108-.082 2.06l-.008.105-.009.104c-.05.572-.124 1.14-.235 1.558a2.007 2.007 0 0 1-1.415 1.42c-1.16.312-5.569.334-6.18.335h-.142c-.309 0-1.587-.006-2.927-.052l-.17-.006-.087-.004-.171-.007-.171-.007c-1.11-.049-2.167-.128-2.654-.26a2.007 2.007 0 0 1-1.415-1.419c-.111-.417-.185-.986-.235-1.558L.09 9.82l-.008-.104A31.4 31.4 0 0 1 0 7.68v-.123c.002-.215.01-.958.064-1.778l.007-.103.003-.052.008-.104.022-.26.01-.104c.048-.519.119-1.023.22-1.402a2.007 2.007 0 0 1 1.415-1.42c.487-.13 1.544-.21 2.654-.26l.17-.007.172-.006.086-.003.171-.007A99.788 99.788 0 0 1 7.858 2h.193zM6.4 5.209v4.818l4.157-2.408L6.4 5.209z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            const menuToggle = document.getElementById('menu-toggle');
+            const navMenu = document.getElementById('nav-menu');
+
+            if (menuToggle && navMenu) {
+                menuToggle.addEventListener('click', () => {
+                    const isActive = menuToggle.classList.toggle('active');
+                    navMenu.classList.toggle('active');
+                    menuToggle.setAttribute('aria-expanded', isActive);
+                    navMenu.setAttribute('aria-hidden', !isActive);
+                    console.log('Hamburger toggled. Active state:', isActive);
+                });
+            } else {
+                console.error('Menu toggle or nav menu not found');
+            }
+
+            // Card flip toggle
+            document.querySelectorAll('.card').forEach(card => {
+                card.addEventListener('click', () => {
+                    card.classList.toggle('flipped');
+                });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        card.classList.toggle('flipped');
+                    }
+                });
+            });
+
+            // Hero parallax effect
+            gsap.to(".hero", {
+                scrollTrigger: {
+                    trigger: ".hero",
+                    start: "top top",
+                    scrub: true
+                },
+                backgroundPositionY: "-50%",
+                ease: "none"
+            });
+
+            // Hero animations
+            gsap.to(".hero-title", {
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                duration: 1,
+                ease: "power3.out",
+                delay: 0.3
+            });
+            gsap.to(".hero-subtitle", {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                ease: "power3.out",
+                delay: 0.6
+            });
+
+            // Overview and card animations
+            gsap.utils.toArray(".overview-card, .card").forEach((element, index) => {
+                gsap.from(element, {
+                    scrollTrigger: {
+                        trigger: element,
+                        start: "top 80%",
+                        toggleActions: "play none none none"
+                    },
+                    opacity: 0,
+                    y: 20,
+                    scale: 0.9,
+                    duration: 0.8,
+                    ease: "power3.out",
+                    delay: index * 0.1
+                });
+            });
+
+            // CTA button animation
+            gsap.to(".cta-button", {
+                scrollTrigger: {
+                    trigger: ".cta-section",
+                    start: "top 80%",
+                    toggleActions: "play none none none"
+                },
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
+                ease: "power3.out"
+            });
+        });
+    </script>
+</body>
+</html>
