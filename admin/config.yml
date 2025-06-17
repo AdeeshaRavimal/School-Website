@@ -1,16 +1,53 @@
 backend:
   name: git-gateway
-  branch: main
+  branch: main # or master, depending on your GitHub default branch
 
-media_folder: "assets/uploads"
-public_folder: "/assets/uploads"
+media_folder: "pictures" # Where uploaded files will be stored in your repo
+public_folder: "/pictures" # The base URL from which the images are served
 
 collections:
-  - name: "gallery"
-    label: "Gallery"
-    folder: "gallery"
-    create: true
-    slug: "{{slug}}"
+  - name: "slideshow" # Internal name for the collection
+    label: "Slideshow Images" # Name shown in the CMS UI
+    folder: "_data" # Where the content file for this collection will be saved
+    file: "slideshow.json" # The specific file name for this collection's data
+    create: false # Do not allow new entries, manage as a single list
+    delete: false # Do not allow deleting entries from this list
     fields:
-      - { label: "Title", name: "title", widget: "string" }
-      - { label: "Image", name: "image", widget: "image" }
+      - label: "Slides"
+        name: "slides"
+        widget: "list"
+        fields:
+          - label: "Image"
+            name: "image"
+            widget: "image"
+            allow_multiple: false
+            required: true
+          - label: "Name (Title)"
+            name: "name"
+            widget: "string"
+            required: true
+          - label: "Description"
+            name: "description"
+            widget: "text"
+            required: true
+
+  - name: "gallery"
+    label: "Gallery Items"
+    folder: "_data"
+    file: "gallery.json"
+    create: false # Manage as a single list of items
+    delete: false
+    fields:
+      - label: "Gallery Images"
+        name: "items"
+        widget: "list"
+        fields:
+          - label: "Image"
+            name: "image"
+            widget: "image"
+            allow_multiple: false
+            required: true
+          - label: "Alt Text"
+            name: "alt_text"
+            widget: "string"
+            required: true
